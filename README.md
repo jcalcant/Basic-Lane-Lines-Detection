@@ -1,56 +1,38 @@
-# **Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
+# **Finding Lane Lines on the Road**
 
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
 
-Overview
+**Finding Lane Lines on the Road**
+
+The goals / steps of this project are the following:
+* Make a pipeline that finds lane lines on the road
+* Reflect on your work in a written report
+
+
+[//]: # (Image References)
+
+[image1]: ./examples/grayscale.jpg "Grayscale"
+
 ---
 
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
+### Reflection
 
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
+### 1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
 
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
+My pipeline consisted of the following steps. As shown in class, first, I converted the images to grayscale, then I applied gaussian blurring to get rid of noise and spurious gradients. I used kernel size 5 since it worked best during the class exercises; also the edges were clearly detected by the following canny edge detector with a threshold rate (1:3). Afterwards, I added plotting of the ROI mask so that I could observe that it covered the area corresponding to the lanes.With this, I defined the polygon's vertices. After filtering the interest area, I applied the Hough lines function so that the points corresponding to a line would be turned into one. I left ro and theta as 2 and pi/180 because I expected lines to be quite straight.To make it a little more robust I elevated the threshold to 40 and max line gap to 20. There were some very small lane lines, so I let the min line length to be of 10. 
 
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
-
-
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
-
-1. Describe the pipeline
-
-2. Identify any shortcomings
-
-3. Suggest possible improvements
-
-We encourage using images in your writeup to demonstrate how your pipeline works.  
-
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
+In order to draw a single line on the left and right lanes, I modified the draw_lines() function by calculating the slopes of each of the lines obtained after applying the Hough lines function. Then, I separated left and right lane lines by the slope sign, thus creating two groups of lines. I rearranged them and concatenated all x together and y respectively so that I could then fit a linear regression model to each lane's (x,y) coordinates. After this I got the model parameters m and b corresponding to the slope and y_intercept. With these parameters, I could now extrapolate for each lane a line starting close to the horizon down to the lowest part of the image.
 
 
-The Project
----
+### 2. Identify potential shortcomings with your current pipeline
 
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
 
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7) if you haven't already.
+One potential shortcoming would be what would happen when the camera is not perfectly centered between both lanes, or when following a curve. Also, light conditions would affect the edge detection.
 
-**Step 2:** Open the code in a Jupyter Notebook
 
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out <A HREF="https://www.packtpub.com/books/content/basics-jupyter-notebook-and-python" target="_blank">Cyrille Rossant's Basics of Jupyter Notebook and Python</A> to get started.
+### 3. Suggest possible improvements to your pipeline
 
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
+A possible improvement would be to have an algorithm to calculate the ROI mask given the image.
 
-`> jupyter notebook`
+Another potential improvement could be to relax the ro and theta parameters in order to capture curves. At the same time, it would be necessary to keep previous lane detection masks, to keep consistency of the current one so that it doesn\'t change radically.
 
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
-
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
+As for light conditions, the Canny edge detector thresholds could be readjusted as a function of a light sensor.
